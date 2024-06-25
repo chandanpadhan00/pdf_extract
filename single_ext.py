@@ -1,7 +1,6 @@
-import PyPDF2
 import pdfplumber
 import re
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfReader, PdfWriter
 
 def extract_index(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
@@ -25,14 +24,14 @@ def find_section_page_range(index_text):
     return start_page, end_page
 
 def extract_pages(pdf_path, start_page, end_page, output_path):
-    reader = PdfFileReader(pdf_path)
-    writer = PdfFileWriter()
+    reader = PdfReader(pdf_path)
+    writer = PdfWriter()
     
     if end_page is None:
-        end_page = reader.getNumPages()
+        end_page = len(reader.pages)
         
     for page_num in range(start_page - 1, end_page):  # pages are 0-indexed
-        writer.addPage(reader.getPage(page_num))
+        writer.add_page(reader.pages[page_num])
     
     with open(output_path, 'wb') as output_pdf:
         writer.write(output_pdf)

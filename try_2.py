@@ -5,13 +5,16 @@ def find_section_pages(pdf_path):
     start_page, end_page = None, None
     
     with pdfplumber.open(pdf_path) as pdf:
-        for i, page in enumerate(pdf.pages[2:], start=3):  # Start from the third page
+        for i, page in enumerate(pdf.pages):
+            if i == 1:  # Skip the second page which is index
+                continue
             text = page.extract_text()
-            if "HOW SUPPLIED/STORAGE AND HANDLING" in text and start_page is None:
-                start_page = i  # Pages are 1-indexed
-            if "PATIENT COUNSELING INFORMATION" in text and start_page is not None:
-                end_page = i - 1  # End page is the page before this one
-                break
+            if text:
+                if "HOW SUPPLIED/STORAGE AND HANDLING" in text and start_page is None:
+                    start_page = i + 1  # Pages are 1-indexed
+                elif "PATIENT COUNSELING INFORMATION" in text and start_page is not None:
+                    end_page = i  # End page is the page before this one
+                    break
     
     return start_page, end_page
 

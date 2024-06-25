@@ -1,5 +1,7 @@
 import pdfplumber
-from PyPDF2 import PdfReader, PdfWriter
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 
 def extract_section_content(pdf_path, start_header, end_header):
     content = []
@@ -27,22 +29,23 @@ def extract_section_content(pdf_path, start_header, end_header):
     return "\n".join(content)
 
 def create_pdf_from_text(content, output_path):
-    from fpdf import FPDF
-
-    class PDF(FPDF):
-        def header(self):
-            pass
-
-        def footer(self):
-            pass
-
-    pdf = PDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, content)
+    c = canvas.Canvas(output_path, pagesize=letter)
+    width, height = letter
     
-    pdf.output(output_path)
+    c.setFont("Helvetica", 12)
+    c.setStrokeColorRGB(0, 0, 0)
+    c.setFillColorRGB(0, 0, 0)
+    
+    text_object = c.beginText(0.5 * inch, height - 0.5 * inch)
+    text_object.setFont("Helvetica", 12)
+    text_object.setTextOrigin(0.5 * inch, height - 0.5 * inch)
+    
+    for line in content.split('\n'):
+        text_object.textLine(line)
+    
+    c.drawText(text_object)
+    c.showPage()
+    c.save()
 
 # Main processing
 pdf_path = "path_to_your_pdf.pdf"

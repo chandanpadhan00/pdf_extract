@@ -13,7 +13,7 @@ def find_section_pages(pdf_path):
                 if "HOW SUPPLIED/STORAGE AND HANDLING" in text and start_page is None:
                     start_page = i + 1  # Pages are 1-indexed
                 elif "PATIENT COUNSELING INFORMATION" in text and start_page is not None:
-                    end_page = i  # End page is the page before this one
+                    end_page = i + 1  # Include the current page as well
                     break
     
     return start_page, end_page

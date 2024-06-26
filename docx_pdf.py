@@ -1,5 +1,6 @@
 import os
 import re
+import pdfplumber
 from pdf2docx import Converter
 from docx import Document
 from docx2pdf import convert
@@ -26,26 +27,20 @@ def clean_docx(docx_path, cleaned_docx_path):
             new_doc.add_paragraph(para.text)
     
     for table in doc.tables:
+        new_table = new_doc.add_table(rows=0, cols=len(table.columns))
+        new_table.style = table.style
         for row in table.rows:
-            for cell in row.cells:
-                for para in cell.paragraphs:
-                    if section_16_pattern.search(para.text):
-                        copy = True
-                    if section_17_pattern.search(para.text):
-                        copy = False
-                    if copy:
-                        new_table = new_doc.add_table(rows=1, cols=len(row.cells))
-                        new_table.style = table.style
-                        for idx, cell in enumerate(row.cells):
-                            new_table.cell(0, idx).text = cell.text
-                        break
+            cells = [cell.text for cell in row.cells]
+            new_row = new_table.add_row().cells
+            for idx, cell in enumerate(new_row):
+                cell.text = cells[idx]
 
     new_doc.save(cleaned_docx_path)
 
 def docx_to_pdf(docx_path, pdf_path):
     convert(docx_path, pdf_path)
 
-def process_all_pdfs(input_folder, output_folder):
+def process_all_pdfs(input_folder, output_folder, start_reading_from=2):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -72,4 +67,4 @@ def process_all_pdfs(input_folder, output_folder):
 input_folder = "path_to_your_input_folder"  # Update this path with the actual input folder path
 output_folder = "path_to_your_output_folder"  # Update this path with the actual output folder path
 
-process_all_pdfs(input_folder, output_folder)
+process_all_pdfs(input_folder, output_folder, start_reading_from=2)

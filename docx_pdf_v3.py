@@ -4,6 +4,7 @@ import pdfplumber
 from pdf2docx import Converter
 from docx import Document
 from docx2pdf import convert
+from docx.shared import Pt
 
 def pdf_to_docx(pdf_path, docx_path):
     cv = Converter(pdf_path)
@@ -17,23 +18,37 @@ def clean_docx(docx_path, cleaned_docx_path):
     
     new_doc = Document()
     copy = False
-    
-    for para in doc.paragraphs:
-        if section_16_pattern.search(para.text):
-            copy = True
-        if section_17_pattern.search(para.text):
-            copy = False
-        if copy:
-            new_doc.add_paragraph(para.text)
-    
-    for table in doc.tables:
-        new_table = new_doc.add_table(rows=0, cols=len(table.columns))
-        new_table.style = table.style
-        for row in table.rows:
-            cells = [cell.text for cell in row.cells]
-            new_row = new_table.add_row().cells
-            for idx, cell in enumerate(new_row):
-                cell.text = cells[idx]
+
+    for element in doc.element.body:
+        if element.tag.endswith('p'):
+            para = Document().paragraphs[0]._element
+            para = element
+            para = Document(new_doc._element, new_doc).paragraphs[-1]
+            text = para.text
+
+            if section_16_pattern.search(text):
+                copy = True
+            if section_17_pattern.search(text):
+                copy = False
+            if copy:
+                new_paragraph = new_doc.add_paragraph(text)
+                for run in para.runs:
+                    new_run = new_paragraph.add_run(run.text)
+                    new_run.bold = run.bold
+                    new_run.italic = run.italic
+                    new_run.underline = run.underline
+                    new_run.font.size = run.font.size
+                    new_run.font.name = run.font.name
+        elif element.tag.endswith('tbl'):
+            if copy:
+                tbl = Document().tables[0]._element
+                tbl = element
+                new_tbl = new_doc.add_table(rows=0, cols=len(tbl.tr_lst[0].tc_lst))
+                new_tbl.style = 'Table Grid'
+                for row in tbl.tr_lst:
+                    new_row = new_tbl.add_row().cells
+                    for idx, cell in enumerate(row.tc_lst):
+                        new_row[idx].text = cell.text
 
     new_doc.save(cleaned_docx_path)
 

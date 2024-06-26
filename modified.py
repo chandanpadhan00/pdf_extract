@@ -18,19 +18,19 @@ def find_section_pages(pdf_path):
                         section_17_start_page = i + 1  # Page where section 17 starts
                     break
     
-    if section_17_start_page and section_17_start_page == end_page + 1:
-        end_page = section_17_start_page - 1
+    if section_17_start_page:
+        if section_17_start_page == start_page + 1:
+            end_page = section_17_start_page - 1
+        else:
+            end_page = section_17_start_page
     else:
-        end_page = section_17_start_page
+        end_page = len(pdf.pages)
 
     return start_page, end_page
 
 def extract_pages(pdf_path, start_page, end_page, output_path):
     reader = PdfReader(pdf_path)
     writer = PdfWriter()
-    
-    if end_page is None:
-        end_page = len(reader.pages)
         
     for page_num in range(start_page - 1, end_page):  # pages are 0-indexed
         writer.add_page(reader.pages[page_num])
